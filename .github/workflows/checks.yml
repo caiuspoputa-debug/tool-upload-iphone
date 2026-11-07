@@ -1,0 +1,55 @@
+name: Agenda Frizerie app checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install locked dependencies
+        run: python -m pip install -r requirements.lock
+      - name: Test private access and Drive backups with mocked providers
+        run: python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Test private salon access with the local Firestore emulator
+        env:
+          JAVA_TOOL_OPTIONS: -Xms32m -Xmx512m -XX:+UseSerialGC
+        run: |
+          npm ci --prefix firebase --ignore-scripts
+          npm --prefix firebase test
+      - run: npm install --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - name: Test immutable synchronization journal
+        run: npm run test:journal
+      - name: Test customizable logo validation, backup and image selection
+        run: node --test tests/logo-state.test.cjs tests/logo-ui.test.cjs
+      - name: Test installation-bound activation and locked bootstrap
+        run: node --test tests/activation-client.test.cjs
+      - name: Test first activation, rejection, cancellation and offline reopen
+        run: node tests/activation-browser.cjs
+      - name: Test Firebase migration, backup and restore guards
+        run: npm run test:firebase
+      - name: Test Firebase bootstrap confirmation and immutable uploads
+        run: npm run test:firebase-transport
+      - name: Test Drive disconnect and delayed callbacks
+        run: npm run test:drive-disconnect
+      - name: Test visible Drive reconnect prompts
+        run: npm run test:drive-reconnect
+      - name: Test reconnect notice in the standalone browser app
+        run: npm run test:drive-reconnect-browser
+      - name: Test standalone app and direct Drive with mocked Google
+        run: npm run test:direct

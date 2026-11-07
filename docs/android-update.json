@@ -1,0 +1,9 @@
+{
+  "versionCode": 20,
+  "versionName": "5.0.14",
+  "minSdk": 26,
+  "size": 2617177,
+  "sha256": "c2450bb9f343c7483f795f9f993cefbfacd9a48fabca88f7e2fd1c06b2b9ca87",
+  "apkUrl": "https://github.com/caiuspoputa-debug/tool-upload-iphone/releases/download/v5.0.14/Agenda-Frizerie-5.0.14.apk",
+  "notes": "Activare păstrată la actualizări și verificabilă offline. Instalările noi pornesc fără logo; la actualizare se păstrează logo-ul existent, inclusiv cel implicit anterior. Programările, backupurile și sincronizarea sunt păstrate."
+}

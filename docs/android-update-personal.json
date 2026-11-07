@@ -1,0 +1,9 @@
+{
+  "versionCode": 21,
+  "versionName": "5.0.15",
+  "minSdk": 26,
+  "size": 2635172,
+  "sha256": "9c042993b95d087d98ed2ff1cfa054e2463ded0b45616e97da0190f76e893571",
+  "apkUrl": "https://github.com/caiuspoputa-debug/tool-upload-iphone/releases/download/v5.0.15/Agenda-Frizerie-5.0.15.apk",
+  "notes": "Agenda Frizerie este semnată cu certificatul personal Caius Poputa. Actualizările din acest canal păstrează datele, setările și activarea acestei ediții."
+}

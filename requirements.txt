@@ -1,0 +1,5 @@
+Flask>=3.1,<4
+Authlib>=1.9,<2
+cryptography>=46,<49
+requests>=2.34,<3
+gunicorn>=23,<26

@@ -1,0 +1,18 @@
+{
+  "name": "agenda-frizerie",
+  "version": "5.0.15",
+  "private": true,
+  "scripts": {
+    "test:browser": "node tests/direct-browser.cjs",
+    "test:direct": "node tests/direct-browser.cjs",
+    "test:journal": "node --test tests/drive-journal.test.cjs",
+    "test:firebase": "node tests/firebase-sync-unit.cjs",
+    "test:firebase-transport": "node --test tests/firebase-transport.test.cjs",
+    "test:drive-reconnect": "node --test tests/drive-reconnect-prompt.test.cjs",
+    "test:drive-reconnect-browser": "node tests/drive-reconnect-browser.cjs",
+    "test:drive-disconnect": "node --test tests/drive-disconnect.test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
