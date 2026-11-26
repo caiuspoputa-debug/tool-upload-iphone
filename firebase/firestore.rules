@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // The administrator pre-approves lowercase email IDs through a trusted
+    // console/IAM session. No app client can inspect or modify this collection.
+    function approvedEmail() {
+      return request.auth.token.email is string
+        && request.auth.token.email.size() > 0
+        && request.auth.token.email.size() <= 254
+        && request.auth.token.email.matches('^[^/]+$')
+        && exists(/databases/$(database)/documents/salonAccess/$(request.auth.token.email.lower()))
+        && get(/databases/$(database)/documents/salonAccess/$(request.auth.token.email.lower())).data.enabled == true;
+    }
+    function owner(uid) {
+      return request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.email_verified == true
+        && approvedEmail();
+    }
+    function fields(data, names) {
+      return data.keys().hasAll(names) && data.keys().hasOnly(names);
+    }
+    function version(data) {
+      return data.version is int && data.version == 1;
+    }
+    function id(value) {
+      return value is string && value.matches('^[A-Za-z0-9_-]{1,128}$');
+    }
+    function digest(value) {
+      return value is string && value.matches('^[a-f0-9]{64}$');
+    }
+    function day(value) {
+      return value is string
+        && value.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$');
+    }
+    function milliseconds(value) {
+      return value is int && value >= 0 && value <= 9007199254740991;
+    }
+    function bodySize(data) {
+      return data.bytes is int && data.bytes >= 0 && data.bytes <= 31457280
+        && data.chunkCount is int && data.chunkCount >= 1 && data.chunkCount <= 256;
+    }
+    function workspace(data) {
+      return fields(data, ['version', 'protocol', 'workspace', 'genesisRevision', 'createdAt'])
+        && version(data) && data.protocol == 'frizerie-firebase-1'
+        && id(data.workspace) && digest(data.genesisRevision) && milliseconds(data.createdAt);
+    }
+    function blob(data, revision) {
+      return fields(data, ['version', 'sha256', 'bytes', 'chunkCount', 'createdAt'])
+        && version(data) && digest(revision) && digest(data.sha256)
+        && bodySize(data) && milliseconds(data.createdAt);
+    }
+    function chunk(data, index) {
+      return fields(data, ['version', 'index', 'payload']) && version(data)
+        && index.matches('^[0-9]{4}$') && data.index is int && data.index >= 0 && data.index <= 255
+        && data.payload is string && data.payload.size() > 0 && data.payload.size() % 4 == 0
+        && data.payload.toUtf8().size() <= 204800
+        && data.payload.matches('^[A-Za-z0-9+/]*={0,2}$');
+    }
+    function journal(data, device) {
+      return fields(data, ['version', 'workspace', 'device', 'revision', 'sha256', 'bytes', 'chunkCount', 'updatedAt'])
+        && version(data) && id(data.workspace) && id(device) && data.device == device
+        && digest(data.revision) && digest(data.sha256) && bodySize(data) && milliseconds(data.updatedAt);
+    }
+    function backup(data, date) {
+      return fields(data, ['version', 'workspace', 'revision', 'sha256', 'bytes', 'chunkCount', 'createdAt', 'sourceDevice'])
+        && version(data) && id(data.workspace) && day(date) && digest(data.revision) && digest(data.sha256)
+        && bodySize(data) && milliseconds(data.createdAt) && id(data.sourceDevice);
+    }
+    function backupState(data) {
+      return fields(data, ['version', 'workspace', 'day', 'revision', 'updatedAt'])
+        && version(data) && id(data.workspace) && day(data.day)
+        && digest(data.revision) && milliseconds(data.updatedAt);
+    }
+
+    match /salonAccess/{email} {
+      allow read, write: if false;
+    }
+
+    match /accounts/{uid}/workspaces/main {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && workspace(request.resource.data);
+      allow update: if owner(uid) && workspace(request.resource.data)
+        && request.resource.data == resource.data;
+      allow delete: if false;
+
+      match /payloads/{sha} {
+        allow read: if owner(uid);
+        allow create: if owner(uid) && blob(request.resource.data, sha);
+        allow update: if owner(uid) && blob(request.resource.data, sha)
+          && request.resource.data == resource.data;
+        allow delete: if owner(uid);
+
+        match /chunks/{index} {
+          allow read: if owner(uid);
+          allow create: if owner(uid) && digest(sha) && chunk(request.resource.data, index);
+          allow update: if owner(uid) && digest(sha) && chunk(request.resource.data, index)
+            && request.resource.data == resource.data;
+          allow delete: if owner(uid);
+        }
+      }
+      match /journals/{device} {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid) && journal(request.resource.data, device);
+      }
+      match /backups/{date} {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid) && backup(request.resource.data, date);
+      }
+      match /backupState/current {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid) && backupState(request.resource.data);
+      }
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

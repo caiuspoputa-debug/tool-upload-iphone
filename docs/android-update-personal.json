@@ -1,0 +1,9 @@
+{
+  "versionCode": 23,
+  "versionName": "5.0.17",
+  "minSdk": 26,
+  "size": 2762484,
+  "sha256": "1b749c46daa139d352ba22fb9178bbb21b62f8f2224e918fc99346db278e5773",
+  "apkUrl": "https://github.com/caiuspoputa-debug/tool-upload-iphone/releases/download/v5.0.17/Agenda-Frizerie-5.0.17.apk",
+  "notes": "Verificare automată zilnică. Butonul Descarcă deschide browserul; APK-ul se deschide și se confirmă manual în Android. Instalatorul intern și permisiunea lui au fost eliminate. Programările și activarea se păstrează."
+}
